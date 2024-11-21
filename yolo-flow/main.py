@@ -1,29 +1,32 @@
 import os
 import cv2
-import torch
+import boto3
 from ultralytics import YOLO
 
 
 def load_model():
-    # model = torch.hub.load('ultralytics/yolov5', 'yolov5s')
+    # Cargar el modelo de YOLO
     model = YOLO("yolov10m.pt")
     return model
 
-def detect_objects(model, image_path, output_path):
-    img = cv2.imread(image_path)
-    results = model.predict(img, classes=[2])
-    print(results)
-
-    # Obtiene la imagen con las detecciones
-    img_with_boxes = results[0]
-    print(type(img_with_boxes))
-    print(img_with_boxes)
-    # Guarda la imagen con las detecciones
-    # cv2.imwrite(output_path, img_with_boxes)
-    img_with_boxes.save(output_path)
-    print(f"Image saved to {output_path}")
+def download_video_from_s3(bucket_name, s3_key, local_path):
+    """
+    Descarga un archivo de S3 a la ubicación local.
+    """
+    s3 = boto3.client("s3")
+    try:
+        print(f"Descargando video de S3: s3://{bucket_name}/{s3_key} -> {local_path}")
+        s3.download_file(bucket_name, s3_key, local_path)
+        print("Descarga completada.")
+        return local_path
+    except Exception as e:
+        print(f"Error al descargar el archivo: {e}")
+        raise
 
 def detect_objects_in_video(model, video_path, output_path):
+    """
+    Procesa un video y detecta objetos.
+    """
     cap = cv2.VideoCapture(video_path)
     frame_width = int(cap.get(3))
     frame_height = int(cap.get(4))
@@ -39,16 +42,20 @@ def detect_objects_in_video(model, video_path, output_path):
 
     cap.release()
     out.release()
-    print(f"Video saved to {output_path}")
+    print(f"Video guardado en: {output_path}")
 
 def main():
-    model = load_model()
-    # image_path = os.getenv('IMAGE_PATH', '/app/image.png')
-    # output_path = '/app/detected_objects.png'
-    # detect_objects(model, image_path, output_path)
+    # Parámetros de S3
+    bucket_name = os.getenv("S3_BUCKET", "v1deo-red1s")
+    s3_key = os.getenv("S3_KEY", "https://v1deo-red1s.s3.us-east-1.amazonaws.com/DJI_20241111150629_0050_D.MP4")
+    local_video_path = "/app/data/DJI_20241111150629_0050_D.mp4"
 
-    video_path = os.getenv('VIDEO_PATH', '/app/data/DJI_20241111150629_0050_D.MP4')
-    output_path = '/app/data/output/detected_objects.mp4'
+    # Descargar el video desde S3
+    video_path = download_video_from_s3(bucket_name, s3_key, local_video_path)
+
+    # Cargar modelo y procesar video
+    model = load_model()
+    output_path = "/app/data/output/detected_objects.mp4"
     detect_objects_in_video(model, video_path, output_path)
 
 if __name__ == "__main__":
