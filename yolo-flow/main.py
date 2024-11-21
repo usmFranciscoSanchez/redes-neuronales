@@ -47,7 +47,7 @@ def detect_objects_in_video(model, video_path, output_path):
 def main():
     # Parámetros de S3
     bucket_name = os.getenv("S3_BUCKET", "v1deo-red1s")
-    s3_key = os.getenv("S3_KEY", "https://v1deo-red1s.s3.us-east-1.amazonaws.com/DJI_20241111150629_0050_D.MP4")
+    s3_key = os.getenv("S3_KEY", "DJI_20241111150629_0050_D.MP4")
     local_video_path = "/app/data/DJI_20241111150629_0050_D.mp4"
 
     # Descargar el video desde S3
