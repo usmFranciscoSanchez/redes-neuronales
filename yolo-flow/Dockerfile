@@ -5,6 +5,7 @@ FROM python:3.8-slim
 RUN apt-get update && apt-get install -y \
     libgl1-mesa-glx \
     libglib2.0-0
+RUN pip install boto3
 
 # Establece el directorio de trabajo en el contenedor
 WORKDIR /app
